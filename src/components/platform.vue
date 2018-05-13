@@ -23,6 +23,7 @@ PlayStation 3
 <style scoped>
 .platform-icon{
     margin-top:20px;
+    color:tomato;
 }
     .icon img{
         height:20px;
