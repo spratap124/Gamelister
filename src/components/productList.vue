@@ -34,6 +34,7 @@
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Genre <span class="caret"></span></a>
                                     <ul class="dropdown-menu">
+                                        <li v-on:click="filterByGenre('all')"><a href="#">All</a></li>
                                         <li v-on:click="filterByGenre('Adventure')"><a href="#">Adventure</a></li>
                                         <li v-on:click="filterByGenre('Platformer')"><a href="#">Platformer</a></li>
                                         <li v-on:click="filterByGenre('RPG')"><a href="#">RPG</a></li>
@@ -56,31 +57,31 @@
                 <div class="loading" v-if="loading">
                     <img src="../assets/images/loading.gif">
                 </div>
-                <div class="item  col-xs-4 col-md-4 col-md-4 col-lg-4" v-for="pd in pdList">
+                <div class="item  col-xs-4 col-md-4 col-md-4 col-lg-4" v-for="game in filteredGames">
                         <div class="score-box">
                             <span class="icon-holder"><i class="fa fa-star"></i></span>
-                            <span class="score-holder">{{pd.score}}</span>
+                            <span class="score-holder">{{game.score}}</span>
                         </div>
                         <div class="thumbnail">
                             <img class="group list-group-image" src="../assets/images/tomb-raider.jpg" alt="" />
                             <div class="caption">
                                 <div class="title-box">
-                                    <a v-bind:href="pd.url" class="game-title">
-                                        <span class="group inner list-group-item-heading ">{{pd.title}}</span>
+                                    <a v-bind:href="game.url" class="game-title">
+                                        <span class="group inner list-group-item-heading ">{{game.title}}</span>
                                     </a>
-                                    <span class="game-year text-danger">({{pd.release_year}})</span>
+                                    <span class="game-year text-danger">({{game.release_year}})</span>
                                 </div>
                                 <div class="genre-box">
                                     <a href="#" class="game-ganre">
-                                        <span class="group inner list-group-item-heading ">{{pd.genre}}</span>
+                                        <span class="group inner list-group-item-heading " v-on:click="filterByGenre(game.genre)">{{game.genre}}</span>
                                     </a>
                                 </div>
                                 <div class="other-details">
                                      <div class="platform-box col-md-3">
-                                        <platform v-bind:platform="pd.platform"></platform>
+                                        <platform v-bind:platform="game.platform"></platform>
                                     </div>
                                     <div class="editor-box col-md-3 pull-right">
-                                        <editorsChoice v-bind:choice="pd.editors_choice"></editorsChoice>
+                                        <editorsChoice v-bind:choice="game.editors_choice"></editorsChoice>
                                     </div>
                                 </div>
                             </div> 
@@ -104,22 +105,30 @@
                 appName:"Game Lister",
                 pdList:[],
                 search:"",
-                loading:true
+                loading:true,
+                currentFilter:"all"
             }
         },
         computed:{ 
             
         },
         methods:{
-            filterGames:function(){
-                console.log("called")
-                if(typeof this.search !== 'undefined'){
-                    this.pdList.filter(function(pd){
-                    return pd.title.indexOf(this.search) > -1;
-                })
-                }
-                
-            },
+            // filteredGames:function(pdList){
+            //     if(this.currentFilter == "all"){
+            //         console.log("all products");
+            //         return pdList;
+            //     }else{
+            //           return  pdList.filter(function(game){
+            //             return game.genre == this.currentFilter;
+            //         });
+            //     }
+            // },
+            //   searchGame: function(){
+            //       var self = this;
+            //       this.filteredGames =  this.pdList.filter(function(game){
+            //          return game.title.includes(self.search);
+            //       })
+            //   },
             sortByScore:function(){
                 this.pdList.sort(function(a,b){
                     
@@ -143,37 +152,28 @@
                 
             },
             filterByGenre:function(filterby){
-
-                if(filterby == "Adventure"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Adventure";
-                    });
-                }else if(filterby == "Platformer"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Platformer";
-                    });
-                }else if(filterby == "Action, Adventure"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Action, Adventure";
-                    });
-                }else if(filterby == "Shooter"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Shooter";
-                    });
-                }else if(filterby == "Strategy"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Strategy";
-                    });
-                }else if(filterby == "Action"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "Action";
-                    });
-                }else if(filterby == "RPG"){
-                    return this.pdList.filter(function(game){
-                        return game.genre == "RPG";
-                    });
-                }
-
+                this.currentFilter = filterby;
+            }
+        },
+        computed: {
+            filteredGames () {
+                const self = this;
+            //for searching
+            if(this.search.length > 0){
+                return self.pdList.filter(function(game) {
+                    console.log(game.title)
+                   return game.title.toLowerCase().indexOf(self.search.toLowerCase()) >= 0;
+                });
+            }else{
+                if (self.currentFilter === 'all') {
+                return self.pdList;
+            } else {
+                return self.pdList.filter(function(game) {
+                   return self.currentFilter === game.genre;
+                });
+            }
+            }
+ 
             }
         },
         created(){
