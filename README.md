@@ -1,6 +1,6 @@
-# sapient-gamelister
+# gamelister
 
-> A game listing application
+> A game listing application build using Vue.js with the functionallity to search, sort and filter the games by genre.
 
 ## Build Setup
 
