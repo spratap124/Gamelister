@@ -1,22 +1,20 @@
 <template>
     <div class="container">
         <div class="container">
-            
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <!-- Brand and toggle get grouped for better mobile display -->
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-5">
                             <div class="grid-container">
-                                <strong>All Games</strong>
+                                <strong>{{currentFilter}} Games</strong>
                                 <div class="btn-group">
                                     <a href="#" id="list" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-th-list">
                                 </span>List</a> <a href="#" id="grid" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-th"></span>Grid</a>
                                 </div>
                             </div>
-                            
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <form class="navbar-form navbar-left">
                                 <div class="form-group">
                                     <input type="text" class="form-control" placeholder="Search" v-model="search">
@@ -28,13 +26,13 @@
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Sort <span class="caret"></span></a>
                                     <ul class="dropdown-menu">
                                         <li v-on:click="sortByScore"><a href="#">Score</a></li>
-                                        <li v-on:click="sortByPlatform"><a href="#">Platforme</a></li>
+                                        <li v-on:click="sortByPlatform"><a href="#">Platform</a></li>
                                     </ul>
                                 </li>
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Genre <span class="caret"></span></a>
                                     <ul class="dropdown-menu">
-                                        <li v-on:click="filterByGenre('all')"><a href="#">All</a></li>
+                                        <li v-on:click="filterByGenre('All')"><a href="#">All</a></li>
                                         <li v-on:click="filterByGenre('Adventure')"><a href="#">Adventure</a></li>
                                         <li v-on:click="filterByGenre('Platformer')"><a href="#">Platformer</a></li>
                                         <li v-on:click="filterByGenre('RPG')"><a href="#">RPG</a></li>
@@ -89,6 +87,9 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-6 col-md-offset-6">
+            <pagination v-bind:currentPage="currentPage" v-on:updatePage="changePage($event)"></pagination>
+        </div>
     </div>
 </template>
 
@@ -106,29 +107,16 @@
                 pdList:[],
                 search:"",
                 loading:true,
-                currentFilter:"all"
+                currentFilter:"All",
+                currentPage:1,
+                gamesPerPage:15,
+                totalGames:0,
+                totalPages:0   // will be calculated after api response
             }
         },
-        computed:{ 
-            
-        },
+        
         methods:{
-            // filteredGames:function(pdList){
-            //     if(this.currentFilter == "all"){
-            //         console.log("all products");
-            //         return pdList;
-            //     }else{
-            //           return  pdList.filter(function(game){
-            //             return game.genre == this.currentFilter;
-            //         });
-            //     }
-            // },
-            //   searchGame: function(){
-            //       var self = this;
-            //       this.filteredGames =  this.pdList.filter(function(game){
-            //          return game.title.includes(self.search);
-            //       })
-            //   },
+            
             sortByScore:function(){
                 this.pdList.sort(function(a,b){
                     
@@ -153,23 +141,55 @@
             },
             filterByGenre:function(filterby){
                 this.currentFilter = filterby;
+            },
+            changePage:function(updatedPage){
+                this.currentPage = updatedPage;
+                
             }
+            
         },
         computed: {
-            filteredGames () {
+            filteredGames:function() {
                 const self = this;
+
             //for searching
             if(this.search.length > 0){
                 return self.pdList.filter(function(game) {
-                    console.log(game.title)
-                   return game.title.toLowerCase().indexOf(self.search.toLowerCase()) >= 0;
+                    
+                   return game.title.toString().toLowerCase().includes(self.search.toLowerCase());
+                }).filter(function(row,index){
+                    //for pagination
+                    if (self.currentPage >= self.totalPages) {
+                            self.currentPage = Math.max(0, self.totalPages - 1);
+                        }
+                        var start = self.gamesPerPage * (self.currentPage - 1);
+                        var end = self.gamesPerPage * self.currentPage;
+                        if(index >= start && index < end) return true;
                 });
-            }else{
-                if (self.currentFilter === 'all') {
-                return self.pdList;
+            }
+            //for filtering
+            else{
+                if (self.currentFilter === 'All') {
+                return self.pdList.filter(function(row,index){
+                    //for pagination
+                    if (self.currentPage >= self.totalPages) {
+                            self.currentPage = Math.max(0, self.totalPages - 1);
+                        }
+                        var start = self.gamesPerPage * (self.currentPage - 1);
+                        var end = self.gamesPerPage * self.currentPage;
+                        if(index >= start && index < end) return true;
+                });
             } else {
                 return self.pdList.filter(function(game) {
                    return self.currentFilter === game.genre;
+                }).filter(function(row,index){
+                    //for pagination
+                    if (self.currentPage >= self.totalPages) {
+                            self.currentPage = Math.max(0, self.totalPages - 1);
+                        }
+                        var start = self.gamesPerPage * (self.currentPage - 1);
+                        var end = self.gamesPerPage * self.currentPage;
+                        if(index >= start && index < end) return true;
                 });
             }
             }
@@ -177,9 +197,13 @@
             }
         },
         created(){
+            var self=this;
+
             this.$http.get('http://starlord.hackerearth.com/gamesext').then(function(data){
-                this.loading = false;
-                this.pdList = data.body.splice(0,30);
+                self.loading = false;
+                self.totalGames = data.body.length;
+                self.totalPages = Math.ceil(self.totalGames/self.gamesPerPage);
+                self.pdList = data.body;
             });
         }
     }
