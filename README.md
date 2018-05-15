@@ -11,5 +11,4 @@ npm install
 # serve with hot reload at localhost:8080
 npm run dev
 
-
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
+![alt text](https://github.com/spratap124/Gamelister/blob/master/src/assets/images/homescreen.png)
